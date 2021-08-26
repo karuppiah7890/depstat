@@ -30,33 +30,35 @@ var cyclesCmd = &cobra.Command{
 	Use:   "cycles",
 	Short: "Prints cycles in dependency chains.",
 	Long:  `Will show all the cycles in the dependencies of the project.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		overview := getDepInfo(nil)
-		var cycleChains []Chain
-		var temp Chain
-		getCycleChains(overview.MainModules[0], overview.Graph, temp, &cycleChains)
-		cycles := getCycles(cycleChains)
+	RunE: runCycles,
+}
 
-		if !jsonOutputCycles {
-			fmt.Println("All cycles in dependencies are: ")
-			for _, c := range cycles {
-				printChain(c)
-			}
-		} else {
-			// create json
-			outputObj := struct {
-				Cycles []Chain `json:"cycles"`
-			}{
-				Cycles: cycles,
-			}
-			outputRaw, err := json.MarshalIndent(outputObj, "", "\t")
-			if err != nil {
-				return err
-			}
-			fmt.Print(string(outputRaw))
+func runCycles(cmd *cobra.Command, args []string) error {
+	overview := getDepInfo(nil)
+	var cycleChains []Chain
+	var temp Chain
+	getCycleChains(overview.MainModules[0], overview.Graph, temp, &cycleChains)
+	cycles := getCycles(cycleChains)
+
+	if !jsonOutputCycles {
+		fmt.Println("All cycles in dependencies are: ")
+		for _, c := range cycles {
+			printChain(c)
 		}
-		return nil
-	},
+	} else {
+		// create json
+		outputObj := struct {
+			Cycles []Chain `json:"cycles"`
+		}{
+			Cycles: cycles,
+		}
+		outputRaw, err := json.MarshalIndent(outputObj, "", "\t")
+		if err != nil {
+			return err
+		}
+		fmt.Print(string(outputRaw))
+	}
+	return nil
 }
 
 // get all chains which have a cycle
